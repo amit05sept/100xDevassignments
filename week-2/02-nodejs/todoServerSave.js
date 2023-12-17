@@ -42,62 +42,104 @@
 const express = require("express");
 const uuid = require("uuid");
 const bodyParser = require("body-parser");
+const fs = require("fs");
 
 const app = express();
 
 app.use(bodyParser.json());
 
-// function timeId() {
-//   return Date.now();
-// }
-
-let todos=[];
-
 app.get("/todos", (req, res) => {
-  res.json(todos);
+  fs.readFile("todos.json", "utf-8", (err, data) => {
+    if (err) {
+      throw err;
+    }
+    res.json(JSON.parse(data));
+  });
 });
 
-function checkId(ID) {
+function checkId(todos, ID) {
   const position = todos.findIndex((todo) => todo.id === ID);
-  return position===-1?0:position+1;
+  return position === -1 ? 0 : position + 1;
 }
 
-// function getTodo(ID) {
-//   return todos.find((todo) => todo.id === ID);
-// }
-
 app.get("/todos/:ID", (req, res) => {
-  const id = req.params.ID;
-  if (!checkId(id)) res.status(404).send(" Not Found");
-  res.json(todos[checkId(id)-1]);
+  fs.readFile("todos.json", "utf-8", (err, data) => {
+    if (err) throw err;
+
+    const id = req.params.ID;
+    const todos = JSON.parse(data);
+    const pos = checkId(todos, id);
+    if (!pos) res.status(404).send(" Not Found");
+    res.json(todos[pos - 1]);
+  });
 });
 
 app.post("/todos", (req, res) => {
-  const todo = req.body;
-  // console.log(todo);
-  todo.id = `${uuid.v1()}`;
-  todos.push(todo);
-  res.status(201).json({
-    id: todo.id,
+  fs.readFile("todos.json", "utf-8", (err, data) => {
+    if (err) throw err;
+
+    const todo = req.body;
+    todo.id = `${uuid.v1()}`;
+
+    const todos = JSON.parse(data);
+    todos.push(todo);
+
+    // writing into file
+    const jsonContent = JSON.stringify(todos);
+    fs.writeFile("todos.json", jsonContent, "utf-8", (err) => {
+      if (err) throw err;
+
+      res.status(201).json({
+        id: todo.id,
+      });
+    });
   });
 });
 
 app.put("/todos/:ID", (req, res) => {
-  const id = req.params.ID;
-  const todo = req.body;
-  if (!checkId(id)) res.status(404).send(" Not Found");
-  const index = checkId(id)-1;
-  const temp = todos[index];
-  todos[index]= todo;
-  todos[index].id=temp.id;
-  res.status(200).send({});
+  fs.readFile("todos.json", "utf-8", (err, data) => {
+    if (err) throw err;
+
+    const todos = JSON.parse(data);
+    const id = req.params.ID;
+    const todo = req.body;
+    const pos = checkId(todos, id);
+    // console.log(pos);
+    if (!pos) res.status(404).send(" Not Foundii");
+    else {
+      todos[pos - 1] = todo;
+      todos[pos].id = id;
+
+      // writing into file
+      const jsonContent = JSON.stringify(todos);
+      fs.writeFile("todos.json", jsonContent, "utf-8", (err) => {
+        if (err) throw err;
+
+        res.status(200).send();
+      });
+    }
+  });
 });
 
-app.delete('/todos/:ID',(req,res)=>{
-  const Id = req.params.ID;
-  if (!checkId(Id)) res.status(404).send();
-  todos.splice(checkId(Id)-1, 1);
-  res.status(200).send();
+app.delete("/todos/:ID", (req, res) => {
+  fs.readFile("todos.json", "utf-8", (err, data) => {
+    if (err) throw err;
+    const todos = JSON.parse(data);
+    const id = req.params.ID;
+    const pos = checkId(todos, id);
+    if (!pos) res.status(404).send("not found");
+    else {
+      todos.splice(pos - 1, 1);
+
+      // writing into file
+      const jsonContent = JSON.stringify(todos);
+      fs.writeFile("todos.json", jsonContent, "utf-8", (err) => {
+        if (err) throw err;
+
+        res.status(200).send();
+      });
+    }
+  });
 });
 
 // for all other routes, return 404
@@ -105,6 +147,5 @@ app.use((req, res, next) => {
   res.status(404).send();
 });
 
-
-// app.listen(3000);
-module.exports = app;
+app.listen(3000);
+//   module.exports = app;
