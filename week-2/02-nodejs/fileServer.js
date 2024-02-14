@@ -17,7 +17,7 @@ const fs = require("fs");
 const path = require("path");
 const app = express();
 
-// const port = 3000;
+const port = 3000;
 
 app.get("/files", (req, res) => {
   const filepath = path.join(__dirname, "./files/");
@@ -26,7 +26,7 @@ app.get("/files", (req, res) => {
     if (err) {
       return res.status(500).json({ error: "Failed to retrieve files" });
     }
-    res.json(files);
+    res.status(200).json(files);
   });
 });
 app.get("/files/:filename", (req, res) => {
