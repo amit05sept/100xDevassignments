@@ -1,9 +1,15 @@
+// let count = 0;
+// function updateCounter() {
+//   count++;
+//   console.log(count); 
+// }
+
+// setInterval(updateCounter, 1000);
+
+
 let count = 0;
-function updateCounter() {
+function updateCounter(){
   count++;
-  console.log(count); 
+  console.log(count);
 }
-
-setInterval(updateCounter, 1000);
-
-
+setInterval(updateCounter,1000*1);
